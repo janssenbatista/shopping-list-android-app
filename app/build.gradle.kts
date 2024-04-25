@@ -66,6 +66,9 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     // koin
     implementation(libs.koin.androidx.compose)
+    // voyager
+    implementation(libs.voyager.navigator)
+    implementation(libs.voyager.transitions)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
