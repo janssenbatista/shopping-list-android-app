@@ -69,6 +69,8 @@ dependencies {
     // voyager
     implementation(libs.voyager.navigator)
     implementation(libs.voyager.transitions)
+    // datastore
+    implementation(libs.androidx.datastore)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

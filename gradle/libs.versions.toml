@@ -1,5 +1,6 @@
 [versions]
 agp = "8.3.2"
+datastore = "1.1.0"
 koinAndroidxCompose = "3.5.3"
 kotlin = "1.9.23"
 coreKtx = "1.13.0"
@@ -15,6 +16,7 @@ voyagerVersion = "1.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-datastore = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomVersion" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomVersion" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomVersion" }
