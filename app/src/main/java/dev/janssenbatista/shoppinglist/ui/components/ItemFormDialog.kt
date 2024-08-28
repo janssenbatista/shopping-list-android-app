@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -15,6 +16,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,6 +27,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -44,8 +47,15 @@ fun ItemFormDialog(
     isUpdating: Boolean = false
 ) {
 
-    val focusRequester = remember {
+    val itemFocusRequester = remember {
         FocusRequester()
+    }
+    val quantityFocusRequester = remember {
+        FocusRequester()
+    }
+
+    LaunchedEffect(key1 = Unit) {
+        itemFocusRequester.requestFocus()
     }
 
     var inputErrorMessage by remember {
@@ -88,14 +98,21 @@ fun ItemFormDialog(
                 OutlinedTextField(
                     value = itemState.name,
                     enabled = !isUpdating,
+                    singleLine = true,
                     onValueChange = {
                         itemState.onNameChange(it)
                     },
                     label = { Text(text = stringResource(R.string.item_name)) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .focusRequester(focusRequester),
-                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words)
+                        .focusRequester(itemFocusRequester),
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Words,
+                        imeAction = ImeAction.Next
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onNext = { quantityFocusRequester.requestFocus() }
+                    )
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
@@ -106,7 +123,9 @@ fun ItemFormDialog(
                         label = { Text(text = stringResource(R.string.quantity)) },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .focusRequester(quantityFocusRequester)
                     )
                     OutlinedTextField(
                         value = itemState.unit,
@@ -163,9 +182,10 @@ fun ItemFormDialog(
                                     onSaveItem(item)
                                     clearFields()
                                 }
-                                focusRequester.requestFocus()
+                                itemFocusRequester.requestFocus()
                             } else {
-                                Toast.makeText(context, inputErrorMessage, Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, inputErrorMessage, Toast.LENGTH_SHORT)
+                                    .show()
                             }
                         }, Modifier.weight(2f)) {
                             Text(text = stringResource(R.string.add_another))
