@@ -174,30 +174,30 @@ class ShoppingListViewModel(
 }
 
 data class ShoppingListState(
-    var shoppingLists: List<ShoppingList> = emptyList(),
-    var shoppingListId: Long? = null,
-    var selectedShoppingList: ShoppingList? = null,
-    var filteredShoppingLists: List<ShoppingList> = emptyList(),
-    var descriptionContains: String = "",
-    var onSearchShoppingList: (String) -> Unit = {},
-    var onClearSearch: () -> Unit = {},
-    var onSelectShoppingList: (Long) -> Unit = {},
-    var onDescriptionContainsChange: (String) -> Unit = {}
+    val shoppingLists: List<ShoppingList> = emptyList(),
+    val shoppingListId: Long? = null,
+    val selectedShoppingList: ShoppingList? = null,
+    val filteredShoppingLists: List<ShoppingList> = emptyList(),
+    val descriptionContains: String = "",
+    val onSearchShoppingList: (String) -> Unit = {},
+    val onClearSearch: () -> Unit = {},
+    val onSelectShoppingList: (Long) -> Unit = {},
+    val onDescriptionContainsChange: (String) -> Unit = {}
 )
 
 data class ItemState(
-    var name: String = "",
-    var quantity: String = "",
-    var unit: String = "",
-    var isInTheCart: Boolean = false,
-    var items: List<Item> = emptyList(),
-    var inputErrorMessage: String = "",
-    var onNameChange: (String) -> Unit = {},
-    var onQuantityChange: (String) -> Unit = {},
-    var onUnitChange: (String) -> Unit = {},
-    var onIsInTheCartChange: (Boolean) -> Unit = {},
-    var onDeleteItem: (Item) -> Unit = {},
-    var onSaveItem: (Item) -> Unit = {},
-    var clearFields: () -> Unit = {},
-    var refreshItemsList: () -> Unit = {}
+    val name: String = "",
+    val quantity: String = "",
+    val unit: String = "",
+    val isInTheCart: Boolean = false,
+    val items: List<Item> = emptyList(),
+    val inputErrorMessage: String = "",
+    val onNameChange: (String) -> Unit = {},
+    val onQuantityChange: (String) -> Unit = {},
+    val onUnitChange: (String) -> Unit = {},
+    val onIsInTheCartChange: (Boolean) -> Unit = {},
+    val onDeleteItem: (Item) -> Unit = {},
+    val onSaveItem: (Item) -> Unit = {},
+    val clearFields: () -> Unit = {},
+    val refreshItemsList: () -> Unit = {}
 )
