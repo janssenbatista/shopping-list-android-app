@@ -53,8 +53,4 @@ class RoomShoppingListRepository(private val dao: ShoppingListDao) : ShoppingLis
     override suspend fun deleteItem(item: Item) {
         dao.deleteItem(item)
     }
-
-    override fun getAllItemsByShoppingListId(shoppingListId: Long): Flow<List<Item>> {
-        return dao.getAllItemsByShoppingListId(shoppingListId)
-    }
 }

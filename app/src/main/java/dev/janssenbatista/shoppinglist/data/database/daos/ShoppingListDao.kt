@@ -40,7 +40,4 @@ interface ShoppingListDao {
 
     @Delete
     suspend fun deleteItem(item: Item)
-
-    @Query("SELECT * FROM tb_items WHERE shopping_list_id = :shoppingListId ORDER BY is_in_the_cart")
-    fun getAllItemsByShoppingListId(shoppingListId: Long): Flow<List<Item>>
 }

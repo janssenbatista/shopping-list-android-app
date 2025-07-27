@@ -4,17 +4,19 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.janssenbatista.shoppinglist.data.entities.Item
 import dev.janssenbatista.shoppinglist.data.entities.ShoppingList
+import dev.janssenbatista.shoppinglist.data.entities.ShoppingListWithItems
 import dev.janssenbatista.shoppinglist.data.repositories.shoppinglist.ShoppingListRepository
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class ShoppingListViewModel(
     private val shoppingListRepository: ShoppingListRepository,
 ) : ViewModel() {
@@ -28,33 +30,49 @@ class ShoppingListViewModel(
     private val _isLoadingItems = MutableStateFlow(false)
     val isLoadingItems = _isLoadingItems.asStateFlow()
 
+    private val selectedShoppingListId = MutableStateFlow<Long?>(null)
+
     init {
         viewModelScope.launch {
-            shoppingListRepository.getAll().collect { shoppingList ->
+            shoppingListRepository.getAll().collect { shoppingLists ->
                 _shoppingListState.update {
-                    it.copy(shoppingLists = shoppingList)
+                    it.copy(shoppingLists = shoppingLists)
                 }
             }
         }
+
+        viewModelScope.launch {
+            _isLoadingItems.value = true
+            selectedShoppingListId
+                .filterNotNull()
+                .flatMapLatest { id ->
+                    shoppingListRepository.getShoppingListWithItems(id)
+                }.catch {
+                    _isLoadingItems.value = false
+                }
+                .map { shoppingListWithItems ->
+                    shoppingListWithItems?.let {
+                        it.copy(items = shoppingListWithItems.items
+                            .sortedBy { item -> item.isInTheCart }
+                        )
+                    }
+                }
+                .collect { shoppingListWithItems ->
+                    shoppingListWithItems?.let {
+                        _shoppingListState.update {
+                            it.copy(shoppingListWithItems = shoppingListWithItems)
+                        }
+                    }
+                    _isLoadingItems.value = false
+                }
+        }
+
 
         _itemState.update { currentState ->
             currentState.copy(
                 onDeleteItem = { item ->
                     viewModelScope.launch {
                         shoppingListRepository.deleteItem(item)
-                        itemState.value.refreshItemsList()
-                    }
-                },
-                refreshItemsList = {
-                    viewModelScope.launch {
-                        _shoppingListState.value.selectedShoppingList?.id?.let {
-                            shoppingListRepository.getAllItemsByShoppingListId(it)
-                                .flowOn(Dispatchers.IO).collect { items ->
-                                    _itemState.update { state ->
-                                        state.copy(items = items)
-                                    }
-                                }
-                        }
                     }
                 },
                 onNameChange = { name ->
@@ -80,7 +98,6 @@ class ShoppingListViewModel(
                 onSaveItem = { item ->
                     viewModelScope.launch {
                         shoppingListRepository.saveItem(item)
-                        itemState.value.refreshItemsList()
                     }
                 },
                 clearFields = {
@@ -107,60 +124,39 @@ class ShoppingListViewModel(
                 },
                 onClearSearch = {
                     _shoppingListState.update {
-                        it.copy(filteredShoppingLists = emptyList(), selectedShoppingList = null, descriptionContains = "")
+                        it.copy(
+                            filteredShoppingLists = emptyList(),
+                            descriptionContains = ""
+                        )
                     }
                 },
                 onSelectShoppingList = { id ->
-                    val selectedShoppingList = _shoppingListState.value.selectedShoppingList
-                    if (selectedShoppingList != null && selectedShoppingList.id == id) {
+                    if (selectedShoppingListId.value == id) {
                         return@copy
                     }
-                    _itemState.value.items = emptyList()
-                    _isLoadingItems.value = true
-                    viewModelScope.launch {
-                        val shoppingList = shoppingListRepository.findById(id)
-                            .flowOn(Dispatchers.IO)
-                            .first()
-                        _shoppingListState.update {
-                            it.copy(
-                                selectedShoppingList = shoppingList,
-                                shoppingListId = shoppingList?.id ?: -1
-                            )
-                        }
-                        if (shoppingList != null) {
-                            val items =
-                                shoppingListRepository.getAllItemsByShoppingListId(shoppingList.id!!)
-                                    .flowOn(Dispatchers.IO)
-                                    .onStart { delay(100) }
-                                    .first()
-                            _itemState.update {
-                                it.copy(items = items)
-                            }
-                            _isLoadingItems.value = false
-                        }
-                    }
+                    selectedShoppingListId.value = id
                 },
-                onDescriptionContainsChange = {description ->
+                onDescriptionContainsChange = { description ->
                     _shoppingListState.update {
                         it.copy(descriptionContains = description)
                     }
                 }
             )
         }
-
-
     }
 
     fun deleteShoppingListAndItems(shoppingListId: Long) {
         viewModelScope.launch {
-            shoppingListRepository.apply {
-                deleteItemsByShoppingListId(shoppingListId)
-            }
+            shoppingListRepository.deleteItemsByShoppingListId(shoppingListId)
         }
         viewModelScope.launch {
             shoppingListRepository.deleteShoppingListById(shoppingListId)
             _shoppingListState.update {
-                it.copy(selectedShoppingList = null, filteredShoppingLists = emptyList())
+                it.copy(filteredShoppingLists = emptyList())
+            }
+            if (selectedShoppingListId.value == shoppingListId) {
+                selectedShoppingListId.value = null
+                _shoppingListState.update { it.copy(shoppingListWithItems = null) }
             }
         }
     }
@@ -168,15 +164,17 @@ class ShoppingListViewModel(
     fun deleteAllItems(shoppingListId: Long) {
         viewModelScope.launch {
             shoppingListRepository.deleteItemsByShoppingListId(shoppingListId)
-            itemState.value.refreshItemsList()
+        }.invokeOnCompletion {
+            _shoppingListState.update {
+                it.copy(filteredShoppingLists = emptyList())
+            }
         }
     }
 }
 
 data class ShoppingListState(
     val shoppingLists: List<ShoppingList> = emptyList(),
-    val shoppingListId: Long? = null,
-    val selectedShoppingList: ShoppingList? = null,
+    val shoppingListWithItems: ShoppingListWithItems? = null,
     val filteredShoppingLists: List<ShoppingList> = emptyList(),
     val descriptionContains: String = "",
     val onSearchShoppingList: (String) -> Unit = {},

@@ -120,7 +120,8 @@ object ShoppingListScreen : Screen {
             FocusRequester()
         }
 
-        ModalNavigationDrawer(drawerState = drawerState,
+        ModalNavigationDrawer(
+            drawerState = drawerState,
             drawerContent = {
                 ModalDrawerSheet {
                     Column {
@@ -215,7 +216,7 @@ object ShoppingListScreen : Screen {
                             ) { index, list ->
                                 Column(
                                     Modifier.background(
-                                        color = if (shoppingListState.selectedShoppingList?.id == list.id) {
+                                        color = if (shoppingListState.shoppingListWithItems?.shoppingList?.id == list.id) {
                                             if (isSystemInDarkTheme()) {
                                                 Color.White.copy(alpha = 0.1f)
                                             } else {
@@ -263,7 +264,8 @@ object ShoppingListScreen : Screen {
                 topBar = {
                     TopAppBar(title = {
                         Text(
-                            text = shoppingListState.selectedShoppingList?.description ?: ""
+                            text = shoppingListState.shoppingListWithItems?.shoppingList?.description
+                                ?: ""
                         )
                     }, navigationIcon = {
                         IconButton(onClick = {
@@ -281,7 +283,7 @@ object ShoppingListScreen : Screen {
                             )
                         }
                     }, actions = {
-                        shoppingListState.selectedShoppingList?.let {
+                        shoppingListState.shoppingListWithItems?.let {
                             IconButton(onClick = {
                                 isDeleteShoppingListDialogVisible = true
                             }) {
@@ -291,30 +293,35 @@ object ShoppingListScreen : Screen {
                                 )
                             }
                         }
-                        if (itemState.items.isNotEmpty()) {
-                            IconButton(onClick = { isPopupMenuVisible = !isPopupMenuVisible }) {
-                                Icon(
-                                    imageVector = Icons.Filled.MoreVert,
-                                    contentDescription = stringResource(R.string.open_popup_menu)
-                                )
-                            }
-                            DropdownMenu(
-                                expanded = isPopupMenuVisible,
-                                onDismissRequest = { isPopupMenuVisible = false }) {
+                        shoppingListState.shoppingListWithItems?.let {
+                            if (it.items.isNotEmpty()) {
+                                IconButton(onClick = { isPopupMenuVisible = !isPopupMenuVisible }) {
+                                    Icon(
+                                        imageVector = Icons.Filled.MoreVert,
+                                        contentDescription = stringResource(R.string.open_popup_menu)
+                                    )
+                                }
+                                DropdownMenu(
+                                    expanded = isPopupMenuVisible,
+                                    onDismissRequest = { isPopupMenuVisible = false }) {
 
-                                DropdownMenuItem(text = {
-                                    Text(text = stringResource(R.string.delete_all_items))
-                                }, onClick = {
-                                    isDeleteAllItemsDialogVisible = true
-                                })
+                                    DropdownMenuItem(text = {
+                                        Text(text = stringResource(R.string.delete_all_items))
+                                    }, onClick = {
+                                        isDeleteAllItemsDialogVisible = true
+                                    })
+                                }
                             }
                         }
                     })
                 },
                 floatingActionButton = {
-                    if (shoppingListState.selectedShoppingList != null) {
+                    shoppingListState.shoppingListWithItems?.let {
                         FloatingActionButton(onClick = { isItemFormDialogOpen = true }) {
-                            Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add_new_item_button))
+                            Icon(
+                                Icons.Filled.Add,
+                                contentDescription = stringResource(R.string.add_new_item_button)
+                            )
                         }
                     }
                 }
@@ -324,86 +331,90 @@ object ShoppingListScreen : Screen {
                         .fillMaxSize()
                         .padding(paddingValues = paddingValues),
                 ) {
-                    if (shoppingListState.selectedShoppingList == null) {
-                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
+
+                    shoppingListState.shoppingListWithItems?.let { shoppingListWithItems ->
+                        AnimatedVisibility(visible = true) {
+                            LazyColumn {
+                                itemsIndexed(
+                                    items = shoppingListWithItems.items,
+                                    key = { _, item ->
+                                        item.name
+                                    }) { index, item ->
+                                    ShoppingListItem(
+                                        Modifier
+                                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                                            .clickable {
+                                                itemState.onSaveItem(
+                                                    item.copy(
+                                                        isInTheCart = !item.isInTheCart
+                                                    )
+                                                )
+                                            }
+                                            .animateItemPlacement(tween(300))
+                                            .fillMaxWidth(),
+                                        item = item,
+                                        onDeleteItem = {
+                                            itemState.onDeleteItem(item)
+                                        },
+                                        onEditItem = {
+                                            itemState.apply {
+                                                onNameChange(item.name)
+                                                onQuantityChange(item.quantity.toString())
+                                                onUnitChange(item.unit)
+                                                onIsInTheCartChange(item.isInTheCart)
+                                            }
+                                            isUpdatingItem = true
+                                            isItemFormDialogOpen = true
+                                        },
+                                        onItemChecked = {
+                                            itemState.onSaveItem(
+                                                item.copy(
+                                                    isInTheCart = !item.isInTheCart
+                                                )
+                                            )
+                                        })
+                                    if (index < itemState.items.size - 1) {
+                                        HorizontalDivider()
+                                    }
+                                }
+                            }
+                            AnimatedVisibility(
+                                visible = isLoadingItems,
+                                enter = fadeIn() + scaleIn(tween(300)),
+                                exit = fadeOut() + scaleOut(tween(300))
                             ) {
-                                Text(text = stringResource(R.string.no_shopping_list_selected), fontSize = 20.sp)
-                                OutlinedButton(onClick = {
-                                    scope.launch {
-                                        drawerState.open()
-                                    }
-                                }) {
-                                    Text(text = stringResource(R.string.select_one_shopping_list))
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize(), contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator()
                                 }
                             }
                         }
-                    }
-                    AnimatedVisibility(
-                        visible = itemState.items.isNotEmpty()
-                    ) {
-                        LazyColumn {
-                            itemsIndexed(
-                                itemState.items,
-                                key = { _, item ->
-                                    item.name
-                                }) { index, item ->
-                                ShoppingListItem(Modifier
-                                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                                    .clickable {
-                                        itemState.onSaveItem(
-                                            item.copy(
-                                                isInTheCart = !item.isInTheCart
-                                            )
-                                        )
-                                    }
-                                    .animateItemPlacement(tween(300))
-                                    .fillMaxWidth(),
-                                    item = item,
-                                    onDeleteItem = {
-                                        itemState.onDeleteItem(item)
-                                    },
-                                    onEditItem = {
-                                        itemState.apply {
-                                            onNameChange(item.name)
-                                            onQuantityChange(item.quantity.toString())
-                                            onUnitChange(item.unit)
-                                            onIsInTheCartChange(item.isInTheCart)
-                                        }
-                                        isUpdatingItem = true
-                                        isItemFormDialogOpen = true
-                                    },
-                                    onItemChecked = {
-                                        itemState.onSaveItem(
-                                            item.copy(
-                                                isInTheCart = !item.isInTheCart
-                                            )
-                                        )
-                                    })
-                                if (index < itemState.items.size - 1) {
-                                    HorizontalDivider()
-                                }
-                            }
-                        }
-                    }
-                    AnimatedVisibility(
-                        visible = isLoadingItems,
-                        enter = fadeIn() + scaleIn(tween(300)),
-                        exit = fadeOut() + scaleOut(tween(300))
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize(), contentAlignment = Alignment.Center
+                    } ?: Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            CircularProgressIndicator()
+                            Text(
+                                text = stringResource(R.string.no_shopping_list_selected),
+                                fontSize = 20.sp
+                            )
+                            OutlinedButton(onClick = {
+                                scope.launch {
+                                    drawerState.open()
+                                }
+                            }) {
+                                Text(text = stringResource(R.string.select_one_shopping_list))
+                            }
                         }
                     }
+
+
                 }
             }
             if (isItemFormDialogOpen) {
-                shoppingListState.selectedShoppingList?.let {
+                shoppingListState.shoppingListWithItems?.shoppingList?.let {
                     ItemFormDialog(
                         shoppingListId = it.id!!,
                         onDismiss = {
@@ -421,7 +432,7 @@ object ShoppingListScreen : Screen {
                     title = stringResource(id = R.string.delete_shopping_list),
                     text = stringResource(
                         R.string.are_you_sure_you_want_to_delete_shopping_list,
-                        shoppingListState.selectedShoppingList!!.description
+                        shoppingListState.shoppingListWithItems?.shoppingList!!.description
                     ),
                     onDismiss = {
                         isDeleteShoppingListDialogVisible = false
@@ -431,18 +442,21 @@ object ShoppingListScreen : Screen {
                             drawerState.open()
                         }
                         isDeleteShoppingListDialogVisible = false
-                        viewModel.deleteShoppingListAndItems(shoppingListState.selectedShoppingList!!.id!!)
+                        viewModel.deleteShoppingListAndItems(shoppingListState.shoppingListWithItems!!.shoppingList.id!!)
                     })
             }
             if (isDeleteAllItemsDialogVisible) {
-                DeleteAlertDialog(title = stringResource(R.string.are_you_sure_you_want_to_delete_all_items),
+                DeleteAlertDialog(
+                    title = stringResource(R.string.are_you_sure_you_want_to_delete_all_items),
                     onDismiss = {
                         isDeleteAllItemsDialogVisible = false
                         isPopupMenuVisible = false
                     }, onConfirm = {
-                        viewModel.deleteAllItems(shoppingListState.shoppingListId!!)
-                        isPopupMenuVisible = false
-                        isDeleteAllItemsDialogVisible = false
+                        shoppingListState.shoppingListWithItems?.shoppingList?.let {
+                            viewModel.deleteAllItems(it.id!!)
+                            isPopupMenuVisible = false
+                            isDeleteAllItemsDialogVisible = false
+                        }
                     })
             }
 

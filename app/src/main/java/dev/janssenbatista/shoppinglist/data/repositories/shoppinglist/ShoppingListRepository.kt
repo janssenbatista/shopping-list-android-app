@@ -23,6 +23,4 @@ interface ShoppingListRepository {
     suspend fun deleteItemsByShoppingListId(shoppingListId: Long)
 
     suspend fun deleteItem(item: Item)
-
-    fun getAllItemsByShoppingListId(shoppingListId: Long): Flow<List<Item>>
 }
