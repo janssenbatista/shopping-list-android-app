@@ -11,6 +11,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -21,10 +25,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -39,6 +45,7 @@ import dev.janssenbatista.shoppinglist.data.entities.Item
 import dev.janssenbatista.shoppinglist.ui.screens.shoppinglist.ItemState
 import java.util.Date
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ItemFormDialog(
     shoppingListId: Long,
@@ -54,6 +61,10 @@ fun ItemFormDialog(
         FocusRequester()
     }
 
+    var expanded by remember {
+        mutableStateOf(false)
+    }
+
     LaunchedEffect(key1 = Unit) {
         itemFocusRequester.requestFocus()
     }
@@ -63,6 +74,7 @@ fun ItemFormDialog(
     }
 
     val context = LocalContext.current
+    val unitAbbreviations = stringArrayResource(id = R.array.unit_abbreviations)
 
     fun validateInputs(): Boolean {
         if (itemState.name.isBlank()) {
@@ -114,7 +126,9 @@ fun ItemFormDialog(
                         onNext = { quantityFocusRequester.requestFocus() }
                     )
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     OutlinedTextField(
                         value = itemState.quantity,
                         onValueChange = {
@@ -127,20 +141,39 @@ fun ItemFormDialog(
                             .weight(1f)
                             .focusRequester(quantityFocusRequester)
                     )
-                    OutlinedTextField(
-                        value = itemState.unit,
-                        onValueChange = {
-                            itemState.onUnitChange(it)
-                        },
-                        label = { Text(text = stringResource(R.string.unity)) },
-                        singleLine = true,
-                        placeholder = { Text(text = stringResource(R.string.unity_example)) },
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Text,
-                            capitalization = KeyboardCapitalization.Characters
-                        ),
-                        modifier = Modifier.weight(1f)
-                    )
+                    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = {
+                        expanded = it
+                    }, modifier = Modifier
+                        .weight(1f)
+                        .padding(top = 8.dp)) {
+                        OutlinedTextField(
+                            value = itemState.unit.ifBlank { unitAbbreviations[0] },
+                            onValueChange = {
+                                itemState.onUnitChange(it)
+                            },
+                            readOnly = true,
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                            },
+                            modifier = Modifier.menuAnchor()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            unitAbbreviations.forEachIndexed { index, abbreviation ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(text = unitAbbreviations[index])
+                                    },
+                                    onClick = {
+                                        itemState.onUnitChange(abbreviation)
+                                        expanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
                 }
                 Row(
                     Modifier.padding(vertical = 8.dp),

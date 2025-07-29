@@ -51,4 +51,17 @@
     <string name="unity">unidade</string>
     <string name="unity_example">ex: UN</string>
     <string name="add_another">Adicionar Outro</string>
+    <string-array name="unit_abbreviations">
+        <item>UND</item>
+        <item>CX</item>
+        <item>PCT</item>
+        <item>KG</item>
+        <item>G</item>
+        <item>L</item>
+        <item>ML</item>
+        <item>LTA</item>
+        <item>GFA</item>
+        <item>DZ</item>
+        <item>SC</item>
+    </string-array>
 </resources>

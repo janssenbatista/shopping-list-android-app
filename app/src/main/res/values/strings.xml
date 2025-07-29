@@ -51,4 +51,17 @@
     <string name="unity">unity</string>
     <string name="unity_example">i.e. EA</string>
     <string name="add_another">Add Another</string>
+    <string-array name="unit_abbreviations">
+        <item>Unit</item>
+        <item>Box</item>
+        <item>Pkg</item>
+        <item>kg</item>
+        <item>g</item>
+        <item>L</item>
+        <item>ml</item>
+        <item>Can</item>
+        <item>Btl</item>
+        <item>Doz</item>
+        <item>Bag</item>
+    </string-array>
 </resources>
