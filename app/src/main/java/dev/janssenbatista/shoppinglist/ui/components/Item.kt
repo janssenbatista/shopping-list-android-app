@@ -1,5 +1,6 @@
 package dev.janssenbatista.shoppinglist.ui.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,16 +26,19 @@ import dev.janssenbatista.shoppinglist.R
 import dev.janssenbatista.shoppinglist.data.entities.Item
 
 @Composable
-fun ShoppingListItem(
+fun Item(
     modifier: Modifier,
     item: Item,
     onItemChecked: () -> Unit,
     onDeleteItem: () -> Unit,
     onEditItem: () -> Unit
 ) {
+
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         Checkbox(checked = item.isInTheCart, onCheckedChange = { onItemChecked() })
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(Modifier.weight(1f).clickable {
+            onItemChecked()
+        }, verticalArrangement = Arrangement.spacedBy(4.dp)) {
             val itemQuantity = if (item.quantity - item.quantity.toInt() == 0.0) {
                 item.quantity.toInt()
             } else {
@@ -56,20 +60,23 @@ fun ShoppingListItem(
                 fontSize = 16.sp
             )
         }
-        Row {
-            IconButton(onClick = { onEditItem() }) {
-                Icon(imageVector = Icons.Filled.Edit, contentDescription = stringResource(
-                    R.string.edit_item,
-                    item.name
-                )
-                )
-            }
-            IconButton(onClick = { onDeleteItem() }) {
-                Icon(
-                    imageVector = Icons.Filled.Delete,
-                    contentDescription = stringResource(R.string.delete_item, item.name),
-                    tint = MaterialTheme.colorScheme.error
-                )
+        if (!item.isInTheCart) {
+            Row {
+                IconButton(onClick = { onEditItem() }) {
+                    Icon(
+                        imageVector = Icons.Filled.Edit, contentDescription = stringResource(
+                            R.string.edit_item,
+                            item.name
+                        )
+                    )
+                }
+                IconButton(onClick = { onDeleteItem() }) {
+                    Icon(
+                        imageVector = Icons.Filled.Delete,
+                        contentDescription = stringResource(R.string.delete_item, item.name),
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
             }
         }
     }
