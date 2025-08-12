@@ -52,6 +52,9 @@
     <string name="unity">unity</string>
     <string name="unity_example">i.e. EA</string>
     <string name="add_another">Add Another</string>
+    <string name="car_items">Cart (%1$d %2$s)</string>
+    <string name="item">Item</string>
+    <string name="items">Items</string>
     <string name="there_s_no_items_in_the_list">There\'s no items in the list</string>
     <string-array name="unit_abbreviations">
         <item>Unit</item>
