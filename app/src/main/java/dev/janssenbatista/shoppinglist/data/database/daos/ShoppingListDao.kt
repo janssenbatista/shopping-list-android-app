@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.Flow
 interface ShoppingListDao {
 
     @Upsert
-    suspend fun save(shoppingList: ShoppingList)
+    suspend fun save(shoppingList: ShoppingList): Long
 
     @Upsert
     suspend fun saveItem(item: Item)
@@ -38,6 +38,9 @@ interface ShoppingListDao {
     @Query("DELETE FROM tb_items WHERE shopping_list_id = :shoppingListId")
     suspend fun deleteItemsByShoppingListId(shoppingListId: Long)
 
+    @Query("UPDATE tb_items SET is_in_the_cart = 1 WHERE shopping_list_id = :shoppingListId")
+    suspend fun addAllToCart(shoppingListId: Long)
+    
     @Delete
     suspend fun deleteItem(item: Item)
 }

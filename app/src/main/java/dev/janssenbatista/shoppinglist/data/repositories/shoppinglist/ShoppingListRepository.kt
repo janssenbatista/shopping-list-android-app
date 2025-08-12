@@ -6,7 +6,7 @@ import dev.janssenbatista.shoppinglist.data.entities.ShoppingListWithItems
 import kotlinx.coroutines.flow.Flow
 
 interface ShoppingListRepository {
-    suspend fun save(shoppingList: ShoppingList)
+    suspend fun save(shoppingList: ShoppingList): Long
 
     suspend fun saveItem(item: Item)
 
@@ -21,6 +21,8 @@ interface ShoppingListRepository {
     suspend fun deleteShoppingListById(shoppingListId: Long)
 
     suspend fun deleteItemsByShoppingListId(shoppingListId: Long)
+
+    suspend fun addAllToCart(shoppingListId: Long)
 
     suspend fun deleteItem(item: Item)
 }

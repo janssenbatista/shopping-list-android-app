@@ -9,8 +9,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 
 class RoomShoppingListRepository(private val dao: ShoppingListDao) : ShoppingListRepository {
-    override suspend fun save(shoppingList: ShoppingList) {
-        withContext(Dispatchers.IO) {
+    override suspend fun save(shoppingList: ShoppingList): Long {
+        return withContext(Dispatchers.IO) {
             dao.save(shoppingList)
         }
     }
@@ -47,6 +47,12 @@ class RoomShoppingListRepository(private val dao: ShoppingListDao) : ShoppingLis
     override suspend fun deleteItemsByShoppingListId(shoppingListId: Long) {
         withContext(Dispatchers.IO) {
             dao.deleteItemsByShoppingListId(shoppingListId)
+        }
+    }
+
+    override suspend fun addAllToCart(shoppingListId: Long) {
+        withContext(Dispatchers.IO) {
+            dao.addAllToCart(shoppingListId)
         }
     }
 
