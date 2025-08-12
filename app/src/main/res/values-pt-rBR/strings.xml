@@ -56,6 +56,7 @@
     <string name="item">item</string>
     <string name="items">itens</string>
     <string name="there_s_no_items_in_the_list">Não há itens na lista</string>
+    <string name="update_shopping_list">Atualizar Lista de Compra</string>
     <string-array name="unit_abbreviations">
         <item>UND</item>
         <item>CX</item>

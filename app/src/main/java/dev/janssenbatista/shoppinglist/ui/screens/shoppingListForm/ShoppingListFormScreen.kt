@@ -23,6 +23,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -40,8 +41,7 @@ import dev.janssenbatista.shoppinglist.ui.components.ColorPicker
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
-object ShoppingListFormScreen : Screen {
-    private fun readResolve(): Any = ShoppingListFormScreen
+class ShoppingListFormScreen(val shoppingListId: Long? = null) : Screen {
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
@@ -52,9 +52,19 @@ object ShoppingListFormScreen : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
 
+        LaunchedEffect(key1 = Unit) {
+            shoppingListId?.let {
+                viewModel.loadShoppingList(it)
+            }
+        }
+
         Scaffold(
             topBar = {
-                TopAppBar(title = { Text(text = stringResource(R.string.create_shopping_list)) },
+                TopAppBar(
+                    title = {
+                        shoppingListId?.let { Text(text = stringResource(R.string.update_shopping_list)) }
+                            ?: Text(text = stringResource(R.string.create_shopping_list))
+                    },
                     navigationIcon = {
                         IconButton(onClick = { navigator.pop() }) {
                             Icon(
@@ -105,7 +115,9 @@ object ShoppingListFormScreen : Screen {
                             },
                             label = { Text(text = stringResource(R.string.description)) },
                             isError = uiState.shoppingListExists,
-                            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words)
+                            keyboardOptions = KeyboardOptions(
+                                capitalization = KeyboardCapitalization.Sentences
+                            )
                         )
                         AnimatedVisibility(visible = uiState.shoppingListExists) {
                             Text(
@@ -118,7 +130,7 @@ object ShoppingListFormScreen : Screen {
                 Button(
                     onClick = {
                         scope.launch {
-                            viewModel.save(navigator)
+                            viewModel.save(shoppingListId, navigator)
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
