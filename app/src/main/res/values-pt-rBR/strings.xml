@@ -51,6 +51,7 @@
     <string name="unity">unidade</string>
     <string name="unity_example">ex: UN</string>
     <string name="add_another">Adicionar Outro</string>
+    <string name="there_s_no_items_in_the_list">Não há itens na lista</string>
     <string-array name="unit_abbreviations">
         <item>UND</item>
         <item>CX</item>
