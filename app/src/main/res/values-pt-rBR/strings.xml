@@ -33,7 +33,8 @@
     <string name="close_search_bar">fechar barra de busca</string>
     <string name="open_menu">abrir menu</string>
     <string name="close_menu">fechar menu</string>
-    <string name="delete_shopping_list">Excluir Lista de Compras</string>
+    <string name="edit_shopping_list">editar lista de compras</string>
+    <string name="delete_shopping_list">excluir lista de Compras</string>
     <string name="open_popup_menu">abrir menu popup</string>
     <string name="delete_all_items">excluir todos os itens</string>
     <string name="add_new_item_button">botão de adicionar novo item</string>
@@ -55,7 +56,11 @@
     <string name="car_items">Carrinho (%1$d %2$s)</string>
     <string name="item">item</string>
     <string name="items">itens</string>
+    <string name="added_to_cart">%s adicionado ao carrinho</string>
+    <string name="item_removed"><strong>%s</strong> removido</string>
+    <string name="undo">Desfazer</string>
     <string name="there_s_no_items_in_the_list">Não há itens na lista</string>
+    <string name="add_all_to_cart">adicionar tudo ao carrinho</string>
     <string name="update_shopping_list">Atualizar Lista de Compra</string>
     <string-array name="unit_abbreviations">
         <item>UND</item>

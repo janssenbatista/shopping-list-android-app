@@ -33,7 +33,8 @@
     <string name="close_search_bar">close search bar</string>
     <string name="open_menu">open menu</string>
     <string name="close_menu">close menu</string>
-    <string name="delete_shopping_list">Delete Shopping List</string>
+    <string name="edit_shopping_list">edit shopping list</string>
+    <string name="delete_shopping_list">delete shopping list</string>
     <string name="open_popup_menu">open popup menu</string>
     <string name="delete_all_items">delete all items</string>
     <string name="add_new_item_button">add new item button</string>
@@ -55,7 +56,11 @@
     <string name="car_items">Cart (%1$d %2$s)</string>
     <string name="item">Item</string>
     <string name="items">Items</string>
+    <string name="added_to_cart">%s added to cart</string>
+    <string name="item_removed"><strong>%s</strong> removed</string>
+    <string name="undo">Undo</string>
     <string name="there_s_no_items_in_the_list">There\'s no items in the list</string>
+    <string name="add_all_to_cart">add all to cart</string>
     <string name="update_shopping_list">Update Shopping List</string>
     <string-array name="unit_abbreviations">
         <item>Unit</item>
