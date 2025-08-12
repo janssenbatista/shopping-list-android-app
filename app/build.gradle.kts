@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "dev.janssenbatista.shoppinglist"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "dev.janssenbatista.shoppinglist"
