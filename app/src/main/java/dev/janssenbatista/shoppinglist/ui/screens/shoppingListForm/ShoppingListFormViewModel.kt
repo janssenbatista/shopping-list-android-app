@@ -4,8 +4,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cafe.adriel.voyager.navigator.Navigator
-import dev.janssenbatista.shoppinglist.data.enums.Colors
 import dev.janssenbatista.shoppinglist.data.entities.ShoppingList
+import dev.janssenbatista.shoppinglist.data.enums.Colors
 import dev.janssenbatista.shoppinglist.data.repositories.shoppinglist.ShoppingListRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,12 +54,12 @@ class ShoppingListFormViewModel(private val repository: ShoppingListRepository) 
         }
     }
 
-    fun save(navigator: Navigator) {
+    fun save(shoppingListId: Long?, navigator: Navigator) {
         viewModelScope.launch {
             val shoppingListExists: ShoppingList? =
                 repository.findByDescription(description = uiState.value.shoppingListDescription)
                     .flowOn(Dispatchers.IO).first()
-            if (shoppingListExists != null) {
+            if (shoppingListExists != null && shoppingListId != shoppingListExists.id) {
                 _uiState.update {
                     it.copy(
                         shoppingListExists = true
@@ -68,11 +68,27 @@ class ShoppingListFormViewModel(private val repository: ShoppingListRepository) 
                 return@launch
             }
             val shoppingList = ShoppingList(
+                id = shoppingListId,
                 description = uiState.value.shoppingListDescription,
                 colorId = uiState.value.shoppingListColorId
             )
             repository.save(shoppingList)
             navigator.pop()
+        }
+    }
+
+    fun loadShoppingList(id: Long) {
+        viewModelScope.launch {
+            repository.findById(id).collect { shoppingList ->
+                _uiState.update {
+                    it.copy(
+                        shoppingListDescription = shoppingList!!.description,
+                        shoppingListColor = Colors
+                            .entries.first { color -> color.id == shoppingList.colorId }.color,
+                        shoppingListColorId = shoppingList.colorId
+                    )
+                }
+            }
         }
     }
 
@@ -85,6 +101,7 @@ data class UIState(
     var shoppingListColorId: Int = -1,
     var isColorPickerVisible: Boolean = false,
     val shoppingListExists: Boolean = false,
+    val shoppingListId: Long? = null,
     val onShoppingListDescriptionChange: (String) -> Unit = {},
     val onShoppingListColorChange: (Color) -> Unit = {},
     val onShoppingListColorIdChange: (Int) -> Unit = {},
