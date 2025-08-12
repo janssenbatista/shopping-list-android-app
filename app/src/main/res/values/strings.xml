@@ -46,6 +46,7 @@
     <string name="item_name_cannot_be_blank">Item name cannot be blank</string>
     <string name="invalid_quantity">invalid quantity</string>
     <string name="add_item">Add Item</string>
+    <string name="update_item">Update Item</string>
     <string name="item_name">Item name</string>
     <string name="quantity">quantity</string>
     <string name="unity">unity</string>

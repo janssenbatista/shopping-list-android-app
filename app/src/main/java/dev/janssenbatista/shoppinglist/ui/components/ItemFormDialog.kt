@@ -25,7 +25,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -77,7 +76,7 @@ fun ItemFormDialog(
     val unitAbbreviations = stringArrayResource(id = R.array.unit_abbreviations)
 
     fun validateInputs(): Boolean {
-        if (itemState.name.isBlank()) {
+        if (itemState.name.trim().isBlank()) {
             inputErrorMessage = context.getString(R.string.item_name_cannot_be_blank)
             return false
         }
@@ -101,7 +100,9 @@ fun ItemFormDialog(
                     .padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = stringResource(R.string.add_item),
+                    text = if (isUpdating) stringResource(R.string.update_item) else stringResource(
+                        R.string.add_item
+                    ),
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.fillMaxWidth(),
@@ -119,7 +120,7 @@ fun ItemFormDialog(
                         .fillMaxWidth()
                         .focusRequester(itemFocusRequester),
                     keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Words,
+                        capitalization = KeyboardCapitalization.Sentences,
                         imeAction = ImeAction.Next
                     ),
                     keyboardActions = KeyboardActions(
@@ -141,11 +142,13 @@ fun ItemFormDialog(
                             .weight(1f)
                             .focusRequester(quantityFocusRequester)
                     )
-                    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = {
-                        expanded = it
-                    }, modifier = Modifier
-                        .weight(1f)
-                        .padding(top = 8.dp)) {
+                    ExposedDropdownMenuBox(
+                        expanded = expanded, onExpandedChange = {
+                            expanded = it
+                        }, modifier = Modifier
+                            .weight(1f)
+                            .padding(top = 8.dp)
+                    ) {
                         OutlinedTextField(
                             value = itemState.unit.ifBlank { unitAbbreviations[0] },
                             onValueChange = {
@@ -185,7 +188,7 @@ fun ItemFormDialog(
                                 shoppingListId = shoppingListId,
                                 name = itemState.name,
                                 quantity = itemState.quantity.toDouble(),
-                                unit = itemState.unit,
+                                unit = itemState.unit.trim().ifBlank { unitAbbreviations[0] },
                                 isInTheCart = itemState.isInTheCart,
                                 updatedAt = Date().time
                             )
@@ -197,8 +200,8 @@ fun ItemFormDialog(
                         } else {
                             Toast.makeText(context, inputErrorMessage, Toast.LENGTH_SHORT).show()
                         }
-                    }, Modifier.weight(1f)) {
-                        Text(text = stringResource(id = R.string.save))
+                    }, Modifier.weight(2f)) {
+                        Text(text = stringResource(id = R.string.save), maxLines = 1)
                     }
                     if (!isUpdating) {
                         Button(onClick = {
@@ -207,7 +210,7 @@ fun ItemFormDialog(
                                     shoppingListId = shoppingListId,
                                     name = itemState.name,
                                     quantity = itemState.quantity.toDouble(),
-                                    unit = itemState.unit,
+                                    unit = itemState.unit.trim().ifBlank { unitAbbreviations[0] },
                                     isInTheCart = itemState.isInTheCart,
                                     updatedAt = Date().time
                                 )
@@ -220,7 +223,7 @@ fun ItemFormDialog(
                                 Toast.makeText(context, inputErrorMessage, Toast.LENGTH_SHORT)
                                     .show()
                             }
-                        }, Modifier.weight(2f)) {
+                        }, Modifier.weight(3f)) {
                             Text(text = stringResource(R.string.add_another))
                         }
                     }
