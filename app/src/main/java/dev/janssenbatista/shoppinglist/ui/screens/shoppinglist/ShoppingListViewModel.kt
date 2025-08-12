@@ -7,12 +7,12 @@ import dev.janssenbatista.shoppinglist.data.entities.ShoppingList
 import dev.janssenbatista.shoppinglist.data.entities.ShoppingListWithItems
 import dev.janssenbatista.shoppinglist.data.repositories.shoppinglist.ShoppingListRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -27,10 +27,8 @@ class ShoppingListViewModel(
     private val _itemState = MutableStateFlow(ItemState())
     val itemState = _itemState.asStateFlow()
 
-    private val _isLoadingItems = MutableStateFlow(false)
-    val isLoadingItems = _isLoadingItems.asStateFlow()
-
-    private val selectedShoppingListId = MutableStateFlow<Long?>(null)
+    private val _selectedShoppingListId = MutableStateFlow<Long?>(null)
+    val selectedShoppingListId = _selectedShoppingListId.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -42,28 +40,29 @@ class ShoppingListViewModel(
         }
 
         viewModelScope.launch {
-            _isLoadingItems.value = true
-            selectedShoppingListId
+            _selectedShoppingListId
                 .filterNotNull()
                 .flatMapLatest { id ->
                     shoppingListRepository.getShoppingListWithItems(id)
                 }.catch {
-                    _isLoadingItems.value = false
-                }
-                .map { shoppingListWithItems ->
-                    shoppingListWithItems?.let {
-                        it.copy(items = shoppingListWithItems.items
-                            .sortedBy { item -> item.isInTheCart }
-                        )
+                    _shoppingListState.update {
+                        it.copy(isLoadingItems = false)
                     }
                 }
                 .collect { shoppingListWithItems ->
                     shoppingListWithItems?.let {
+                        val items = shoppingListWithItems.items.filter { item -> !item.isInTheCart }
+                        val itemsAtCart =
+                            shoppingListWithItems.items.filter { item -> item.isInTheCart }
                         _shoppingListState.update {
-                            it.copy(shoppingListWithItems = shoppingListWithItems)
+                            it.copy(
+                                shoppingListWithItems = shoppingListWithItems,
+                                items = items,
+                                itemsAtCart = itemsAtCart,
+                                isLoadingItems = false
+                            )
                         }
                     }
-                    _isLoadingItems.value = false
                 }
         }
 
@@ -131,10 +130,21 @@ class ShoppingListViewModel(
                     }
                 },
                 onSelectShoppingList = { id ->
-                    if (selectedShoppingListId.value == id) {
+                    if (_selectedShoppingListId.value == id) {
                         return@copy
                     }
-                    selectedShoppingListId.value = id
+                    _shoppingListState.update {
+                        it.copy(
+                            isLoadingItems = true,
+                            shoppingListWithItems = null,
+                            items = emptyList(),
+                            itemsAtCart = emptyList()
+                        )
+                    }
+                    viewModelScope.launch {
+                        delay(timeMillis = 1_000)
+                        _selectedShoppingListId.value = id
+                    }
                 },
                 onDescriptionContainsChange = { description ->
                     _shoppingListState.update {
@@ -152,12 +162,18 @@ class ShoppingListViewModel(
         viewModelScope.launch {
             shoppingListRepository.deleteShoppingListById(shoppingListId)
             _shoppingListState.update {
-                it.copy(filteredShoppingLists = emptyList())
+                it.copy(filteredShoppingLists = emptyList(), itemsAtCart = emptyList())
             }
-            if (selectedShoppingListId.value == shoppingListId) {
-                selectedShoppingListId.value = null
+            if (_selectedShoppingListId.value == shoppingListId) {
+                _selectedShoppingListId.value = null
                 _shoppingListState.update { it.copy(shoppingListWithItems = null) }
             }
+        }
+    }
+
+    fun addAllToCart(shoppingListId: Long) {
+        viewModelScope.launch {
+            shoppingListRepository.addAllToCart(shoppingListId)
         }
     }
 
@@ -166,7 +182,7 @@ class ShoppingListViewModel(
             shoppingListRepository.deleteItemsByShoppingListId(shoppingListId)
         }.invokeOnCompletion {
             _shoppingListState.update {
-                it.copy(filteredShoppingLists = emptyList())
+                it.copy(filteredShoppingLists = emptyList(), itemsAtCart = emptyList())
             }
         }
     }
@@ -175,6 +191,9 @@ class ShoppingListViewModel(
 data class ShoppingListState(
     val shoppingLists: List<ShoppingList> = emptyList(),
     val shoppingListWithItems: ShoppingListWithItems? = null,
+    val items: List<Item> = emptyList(),
+    val itemsAtCart: List<Item> = emptyList(),
+    val isLoadingItems: Boolean = false,
     val filteredShoppingLists: List<ShoppingList> = emptyList(),
     val descriptionContains: String = "",
     val onSearchShoppingList: (String) -> Unit = {},
@@ -188,7 +207,6 @@ data class ItemState(
     val quantity: String = "",
     val unit: String = "",
     val isInTheCart: Boolean = false,
-    val items: List<Item> = emptyList(),
     val inputErrorMessage: String = "",
     val onNameChange: (String) -> Unit = {},
     val onQuantityChange: (String) -> Unit = {},
@@ -197,5 +215,4 @@ data class ItemState(
     val onDeleteItem: (Item) -> Unit = {},
     val onSaveItem: (Item) -> Unit = {},
     val clearFields: () -> Unit = {},
-    val refreshItemsList: () -> Unit = {}
 )
