@@ -117,7 +117,8 @@ class ShoppingListFormScreen(val shoppingListId: Long? = null) : Screen {
                             isError = uiState.shoppingListExists,
                             keyboardOptions = KeyboardOptions(
                                 capitalization = KeyboardCapitalization.Sentences
-                            )
+                            ),
+                            modifier = Modifier.fillMaxWidth()
                         )
                         AnimatedVisibility(visible = uiState.shoppingListExists) {
                             Text(
