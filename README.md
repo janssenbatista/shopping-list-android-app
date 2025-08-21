@@ -15,13 +15,14 @@ Aplicativo para gerenciar Listas de Compras
 
 ### 📸 Screenshots
 
-<div style="display: flex; flex-wrap: wrap;">
-    <img src="screenshots/1.png" width="30%" />
-    <img src="screenshots/2.png" width="30%" />
-    <img src="screenshots/3.png" width="30%" />
-    <img src="screenshots/4.png" width="30%" />
-    <img src="screenshots/5.png" width="30%" />
-    <img src="screenshots/6.png" width="30%" />
+<div style="display: flex; flex-wrap: wrap; gap: 10px;">
+    <img src="screenshots/01.jpg" width="22%" />
+    <img src="screenshots/02.jpg" width="22%" />
+    <img src="screenshots/03.jpg" width="22%" />
+    <img src="screenshots/04.jpg" width="22%" />
+    <img src="screenshots/05.jpg" width="22%" />
+    <img src="screenshots/06.jpg" width="22%" />
+    <img src="screenshots/07.jpg" width="22%" />
 
 </div>
 
