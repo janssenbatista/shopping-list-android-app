@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import dev.janssenbatista.shoppinglist.R
 import dev.janssenbatista.shoppinglist.data.entities.Item
 import dev.janssenbatista.shoppinglist.ui.screens.shoppinglist.ShoppingListState
+import dev.janssenbatista.shoppinglist.ui.utils.WindowSize
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -43,6 +44,7 @@ fun ShoppingList(
     shoppingListState: ShoppingListState,
     selectedShoppingListId: Long?,
     drawerState: DrawerState,
+    windowSize: WindowSize,
     onEditItem: (Item) -> Unit,
     onDeleteItem: (Item) -> Unit,
     onItemChecked: (Item) -> Unit,
@@ -128,12 +130,14 @@ fun ShoppingList(
                     text = stringResource(R.string.no_shopping_list_selected),
                     fontSize = 20.sp
                 )
-                OutlinedButton(onClick = {
-                    scope.launch {
-                        drawerState.open()
+                if (windowSize == WindowSize.Compact) {
+                    OutlinedButton(onClick = {
+                        scope.launch {
+                            drawerState.open()
+                        }
+                    }) {
+                        Text(text = stringResource(R.string.select_one_shopping_list))
                     }
-                }) {
-                    Text(text = stringResource(R.string.select_one_shopping_list))
                 }
             }
         }
